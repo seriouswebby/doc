@@ -12,15 +12,16 @@ This guide also omits details that can be found on the web such as setting up th
  * or; Raspberry Pi 3
  * http://pvoutput.org account with API key
 
-## Main Steps
+## Steps
+
+### Setup Raspberry Pi
 
 First get the latest [Raspbian Jessie Lite](https://www.raspberrypi.org/downloads/raspbian/) image, current at time of writing is 2017-03-02.
 
 Login to your pi so you can enable remote ssh access
 
-| Username |`pi`|
-| --- | --- |
-| Password |`raspberry`|
+ * Username: `pi`
+ * Password: `raspberry`
 
 First update your pi:
 
@@ -53,6 +54,8 @@ sudo apt-get install ntpdate
 sudo ntpdate -u ntp.ubuntu.com
 ```
 
+### Find SMA Inverter
+
 Setup your bluetooth:
 
 `sudo apt-get install bluetooth`
@@ -60,6 +63,8 @@ Setup your bluetooth:
 Check your bluetooth and see if you can see the MAC address of your SMA inverter:
 
 `hcitool scan`
+
+### Build SBFSpot
 
 Setup and install SBFspot to retrieve the data from the inverter and store it in a SQLite/MySQL database (this guide is using MySQL but should be very similar to setup sqlite).
 
@@ -83,7 +88,7 @@ sudo mkdir /var/log/sbfspot.3
 sudo chown pi:pi /var/log/sbfspot.3
 ```
 
-Download SBFSpot source from the website and copy it across and extract:
+Download [SBFspot](https://sbfspot.codeplex.com/) source code from the website, copy it across and extract:
 
 ```shell
 scp SBFspot_SRC_331_Linux_Win32.tar.gz pi@192.168.1.101:.
@@ -99,7 +104,9 @@ sudo make install_mysql
 
 Will install to `/usr/local/bin/sbfspot.3/`
 
-Now setup MySQL database, I will not go into how to install MySQL/MariaDB server so either install it locally or on another machine.
+### Setup MySQL/MariaDB
+
+Now setup the MySQL/MariaDB database, I will not go into how to install MySQL/MariaDB server so either install it locally or on another machine.
 
 Create the users/database in your MySQL/MariaDB server:
 
@@ -108,15 +115,17 @@ mysql -u root -h localhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
 mysql -u root -h localhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
 ```
 
+### Setup SBFSpot Config
+
 Edit you config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspot/SBFspot.cfg`):
 
-Manual
+#### Manual
 
 `sudo vi /usr/local/bin/sbfspot.3/SBFspot.cfg`
 
-Automated:
+#### Automated
 
-Set some environment variables (just paste into your shell):
+Set some environment variables (edit the variables and just paste into your shell):
 
 ```shell
 BLUETOOTH_MAC_ADDRESS=00:00:00:00:00:00
@@ -142,19 +151,21 @@ The following sed commands will (in order):
  10. Update timezone
 
 ```shell
-sudo sed -i “s/00:00:00:00:00:00/${BLUETOOTH_MAC_ADDRESS}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/MyPlant/${PLANT_NAME}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/Latitude=.*/Latitude=${LATITUDE}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/Longitude=.*/Longitude=${LONGITUDE}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/^#SQL/SQL/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_IP_ADDRESS}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “/SBFspot.db/ s/^/#/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s/CSV_Export=1/CSV_Export=${ENABLE_CSV_REPORT}/“ /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i “s~/home/pi/smadata~${SBFSPOT_DATA_DIR}~” /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i "s~Europe/Brussels~${TZ}~” /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/00:00:00:00:00:00/${BLUETOOTH_MAC_ADDRESS}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/MyPlant/${PLANT_NAME}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/Latitude=.*/Latitude=${LATITUDE}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/Longitude=.*/Longitude=${LONGITUDE}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/^#SQL/SQL/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_IP_ADDRESS}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/CSV_Export=1/CSV_Export=${ENABLE_CSV_REPORT}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s~/home/pi/smadata~${SBFSPOT_DATA_DIR}~" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s~Europe/Brussels~${TZ}~" /usr/local/bin/sbfspot.3/SBFspot.cfg
 ```
 
-Should be ready top rock, run the application in verbose mode and force the inquiry (as your lat/long may indicate its night time and it won’t run):
+### Lets Rock!
+
+Should be ready to rock, run the application in verbose mode and force the inquiry (as your lat/long may indicate its night time and it won't run):
 
 `/usr/local/bin/sbfspot.3/SBFspot -v -finq`
 
