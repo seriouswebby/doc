@@ -27,11 +27,13 @@ First update your pi:
 
 `sudo apt-get update && sudo apt-get upgrade`
 
-Enable SSH:
+Enable SSH and fix your timezone:
 
 `sudo raspi-config`
 
 > Interfacing Options -> SSH -> Enable
+
+> Localisation Options -> Change Timezone
 
  * (_Optional_) [Create a new user and disable the default `pi` user](https://www.raspberrypi.org/documentation/linux/usage/users.md).
  * (_Optional_) [Setup a static IP](https://www.modmypi.com/blog/how-to-give-your-raspberry-pi-a-static-ip-address-update).
@@ -45,14 +47,6 @@ ssh pi@192.168.1.101
 ```
 
 *_Windows_*: Use Putty/Pageant
-
-TODO: The Pi lacks a hardware clock, setup NTP and your timezone (timezone can also be set via raspi-config):
-
-```shell
-sudo dpkg-reconfigure tzdata
-sudo apt-get install ntpdate
-sudo ntpdate -u ntp.ubuntu.com
-```
 
 ### Find SMA Inverter
 
