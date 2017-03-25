@@ -231,6 +231,9 @@ Description=Reads SMA inverter data from a database and sends it to Pvoutput.org
 
 [Service]
 Type=forking
+User=pi
+Restart=always
+RestartSec=5
 ExecStart=/usr/local/bin/sbfspot.3/SBFspotUploadDaemon
 
 [Install]
