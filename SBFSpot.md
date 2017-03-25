@@ -223,9 +223,27 @@ sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "s~/home/pi/smadata/logs~${SBFSPOT_LOG_DIR}~" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 ```
 
+Add to systemd:
+
+```shell
+echo '[Unit]
+Description=Reads SMA inverter data from a database and sends it to Pvoutput.org
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/sbfspot.3/SBFspotUploadDaemon
+
+[Install]
+WantedBy=multi-user.target
+Alias=SBFspotUploadDaemon.service
+' | sudo tee /lib/systemd/system/SBFspotUploadDaemon.service
+
+sudo systemctl enable SBFspotUploadDaemon.service
+```
+
 Start the daemon:
 
-`/usr/local/bin/sbfspot.3/SBFspotUploadDaemon`
+`sudo systemctl start SBFspotUploadDaemon.service`
 
 Check the logs:
 
