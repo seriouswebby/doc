@@ -111,13 +111,13 @@ mysql -u root -h localhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
 
 ### Setup SBFSpot Config
 
-Edit you config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspot/SBFspot.cfg`):
+Edit your config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspot/SBFspot.cfg`):
 
 #### Manual
 
 `sudo vi /usr/local/bin/sbfspot.3/SBFspot.cfg`
 
-#### Automated
+#### Semi-Automated
 
 Set some environment variables (edit the variables and just paste into your shell):
 
@@ -133,10 +133,10 @@ TZ=$(cat /etc/timezone)
 ```
 
 The following sed commands will (in order):
- 1. Updating bluetooth address
- 2. Updating plant name (can contain spaces i believe)
- 3. Updating latitude
- 4. Updating longitude
+ 1. Update bluetooth address
+ 2. Update plant name (can contain spaces i believe)
+ 3. Update latitude
+ 4. Update longitude
  5. Uncomment MySQL section
  6. Update MySQL hostname
  7. Comment out SQLite
@@ -163,5 +163,84 @@ Should be ready to rock, run the application in verbose mode and force the inqui
 
 `/usr/local/bin/sbfspot.3/SBFspot -v -finq`
 
-TODO:  The service/daemon reads the data from the database and sends it to Pvoutput.org
+Hopefully everything will be working as expected.
 
+### Setup a Scheduled Task
+
+Add a cron script to run every 5 minutes:
+
+*Note*: This will destroy your current crontab.
+
+```shell
+echo '*/5 6-20 * * * /usr/local/bin/sbfspot.3/SBFspot -v > /var/log/sbfspot.3/SBFspot$(date +%Y%m%d).log 2>&1
+' | crontab
+```
+
+### Integrate pvoutput.org
+
+The service/daemon reads the data from the database and sends it to Pvoutput.org
+
+`sudo apt-get install libcurl4-openssl-dev`
+
+```shell
+cd /usr/src/sbfspot.3/SBFspotUploadDaemon
+sudo make install_mysql
+```
+
+### Setup SBFspotUpload Config
+
+Edit your config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspotUploadDaemon/SBFspotUpload.cfg`):
+
+#### Manual
+
+`sudo vi /usr/local/bin/sbfspot.3/SBFspotUpload.cfg`
+
+#### Semi-Automated
+
+Set some environment variables (edit the variables and just paste into your shell):
+
+```shell
+PVOUTPUT_SID=SerialNmbrInverter_1:SID_1,SerialNmbrInverter_2:SID_2, etc
+PVOUTPUT_API_KEY=acbd1234
+MYSQL_IP_ADDRESS=localhost
+SBFSPOT_LOG_DIR=/var/log/sbfspot.3
+```
+
+The following sed commands will (in order):
+ 1. Update pvoutput.org serial and SID
+ 2. Update pvoutput.org API key
+ 3. Uncomment MySQL section
+ 4. Update MySQL hostname
+ 5. Comment out SQLite
+ 6. Update log directory
+
+```shell
+sudo sed -i "s/PVoutput_SID=/PVoutput_SID=${PVOUTPUT_SID}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "s/PVoutput_Key=/PVoutput_Key=${PVOUTPUT_API_KEY}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "s/^#SQL/SQL/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_IP_ADDRESS}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "s~/home/pi/smadata/logs~${SBFSPOT_LOG_DIR}~" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+```
+
+Start the daemon:
+
+`/usr/local/bin/sbfspot.3/SBFspotUploadDaemon`
+
+Check the logs:
+
+`cat /var/log/sbfspot.3/SBFspotUpload*`
+
+### Setup Log Rotation
+
+Add some log rotation so you dont run out of disk space (keeping 30 days worth of logs):
+
+```shell
+echo '/var/log/sbfspot.3/SBFspot*.log {
+    rotate 30
+    daily
+    missingok
+    notifempty
+    compress
+}' | sudo tee -a /etc/logrotate.d/sbfspot.3
+```
