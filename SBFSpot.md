@@ -172,7 +172,7 @@ Add a cron script to run every 5 minutes:
 *Note*: This will destroy your current crontab.
 
 ```shell
-echo '*/5 6-20 * * * /usr/local/bin/sbfspot.3/SBFspot -v > /var/log/sbfspot.3/SBFspot$(date +%Y%m%d).log 2>&1
+echo '*/5 6-20 * * * /usr/local/bin/sbfspot.3/SBFspot -v > "/var/log/sbfspot.3/SBFspot$(date +\%Y\%m\%d).log" 2>&1
 ' | crontab
 ```
 
