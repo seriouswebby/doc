@@ -10,13 +10,14 @@ This guide also omits details that can be found on the web such as setting up th
    * Bluetooth USB Stick
    * (Optional) Wifi USB Stick
  * or; Raspberry Pi 3
+ * or; Raspberry Pi Zero W
  * http://pvoutput.org account with API key
 
 ## Steps
 
 ### Setup Raspberry Pi
 
-First get the latest [Raspbian Jessie Lite](https://www.raspberrypi.org/downloads/raspbian/) image, current at time of writing is 2017-03-02.
+First get the latest [Raspbian Jessie Lite](https://www.raspberrypi.org/downloads/raspbian/) image, current at time of writing is 2017-06-21.
 
 Login to your pi so you can enable remote ssh access
 
@@ -60,7 +61,7 @@ Check your bluetooth and see if you can see the MAC address of your SMA inverter
 
 ### Build SBFSpot
 
-Setup and install SBFspot to retrieve the data from the inverter and store it in a SQLite/MySQL database (this guide is using MySQL but should be very similar to setup sqlite).
+Setup and install SBFspot to retrieve the data from the inverter and store it in a SQLite/MySQL database (this guide is using MySQL/Maria but should be very similar to setup sqlite).
 
 `sudo apt-get install mysql-client-5.5 libbluetooth-dev libboost-all-dev libmysqlclient-dev`
 
@@ -105,8 +106,14 @@ Now setup the MySQL/MariaDB database, I will not go into how to install MySQL/Ma
 Create the users/database in your MySQL/MariaDB server:
 
 ```shell
-mysql -u root -h localhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
-mysql -u root -h localhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
+mysql -uroot -hlocalhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
+mysql -uroot -hlocalhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
+```
+
+Test your MySQL/MariaSB connection:
+
+```shell
+mysql -uSBFspotUser -h192.168.1.250 -pSBFspotPassword SBFspot
 ```
 
 ### Setup SBFSpot Config
