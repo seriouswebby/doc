@@ -113,7 +113,7 @@ mysql -uroot -hlocalhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
 Test your MySQL/MariaSB connection:
 
 ```shell
-mysql -uSBFspotUser -h192.168.1.250 -pSBFspotPassword SBFspot
+mysql -uSBFspotUser -hlocalhost -pSBFspotPassword SBFspot
 ```
 
 ### Setup SBFSpot Config
