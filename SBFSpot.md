@@ -101,19 +101,20 @@ Will install to `/usr/local/bin/sbfspot.3/`
 
 ### Setup MySQL/MariaDB
 
-Now setup the MySQL/MariaDB database, I will not go into how to install MySQL/MariaDB server so either install it locally or on another machine.
+Now setup the MySQL/MariaDB database, I will not go into how to install MySQL/MariaDB server so either install it locally or on another machine. If using another machine be sure to edit the `CreateMySQLUser.sql` file and change localhost to the IP address of your host, alternative use `'%'` for all IP addresses if security is not a concern.
 
 Create the users/database in your MySQL/MariaDB server:
 
 ```shell
-mysql -uroot -hlocalhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
-mysql -uroot -hlocalhost -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
+MYSQL_HOST=localhost
+mysql -uroot -h$MYSQL_HOST -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
+mysql -uroot -h$MYSQL_HOST -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
 ```
 
 Test your MySQL/MariaSB connection:
 
 ```shell
-mysql -uSBFspotUser -hlocalhost -pSBFspotPassword SBFspot
+mysql -uSBFspotUser -h$MYSQL_HOST -pSBFspotPassword SBFspot
 ```
 
 ### Setup SBFSpot Config
@@ -259,16 +260,10 @@ Check the logs:
 
 `cat /var/log/sbfspot.3/SBFspotUpload*`
 
-### Setup Log Rotation
+### Automatically Purge Old Logs
 
-Add some log rotation so you dont run out of disk space (keeping 30 days worth of logs):
+This will remove log files older than 30 days:
 
 ```shell
-echo '/var/log/sbfspot.3/SBFspot*.log {
-    rotate 30
-    daily
-    missingok
-    notifempty
-    compress
-}' | sudo tee -a /etc/logrotate.d/sbfspot.3
+(crontab -l ; echo '1 0 * * * find /var/log/sbfspot.3/ -name "SBFspot*.log" -mtime +30 -delete')| crontab -
 ```
