@@ -45,8 +45,8 @@ Enable SSH and fix your timezone:
 
 ```shell
 ssh-keygen -t rsa -C "your_email@example.com"
-ssh-copy-id pi@192.168.1.101
-ssh pi@192.168.1.101
+ssh-copy-id pi@solarpi.local
+ssh pi@solarpi.local
 ```
 
 *_Windows_*: Use Git Bash as it contains useful unit tools, ie. ssh
@@ -88,7 +88,8 @@ sudo chown pi:pi /var/log/sbfspot.3
 Download [SBFspot](https://github.com/SBFspot/SBFspot) source code from the website, copy it across and extract:
 
 ```shell
-scp SBFspot_SRC_331_Linux_Win32.tar.gz pi@192.168.1.101:.
+scp SBFspot_SRC_331_Linux_Win32.tar.gz pi@solarpi.local:.
+ssh pi@solarpi.local
 tar -xvf SBFspot_SRC_331_Linux_Win32.tar.gz -C /usr/src/sbfspot.3/
 ```
 
@@ -136,7 +137,7 @@ BLUETOOTH_MAC_ADDRESS=00:00:00:00:00:00
 PLANT_NAME=MyPlant
 LATITUDE=50.80
 LONGITUDE=4.33
-MYSQL_IP_ADDRESS=localhost
+MYSQL_HOST=localhost
 ENABLE_CSV_REPORT=0
 SBFSPOT_DATA_DIR=/var/opt/data/sbfspot.3
 TZ=$(cat /etc/timezone)
@@ -160,7 +161,7 @@ sudo sed -i "s/MyPlant/${PLANT_NAME}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "s/Latitude=.*/Latitude=${LATITUDE}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "s/Longitude=.*/Longitude=${LONGITUDE}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "s/^#SQL/SQL/" /usr/local/bin/sbfspot.3/SBFspot.cfg
-sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_IP_ADDRESS}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
+sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_HOST}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "s/CSV_Export=1/CSV_Export=${ENABLE_CSV_REPORT}/" /usr/local/bin/sbfspot.3/SBFspot.cfg
 sudo sed -i "s~/home/pi/smadata~${SBFSPOT_DATA_DIR}~" /usr/local/bin/sbfspot.3/SBFspot.cfg
@@ -212,7 +213,7 @@ Set some environment variables (edit the variables and just paste into your shel
 ```shell
 PVOUTPUT_SID=SerialNmbrInverter_1:SID_1,SerialNmbrInverter_2:SID_2, etc
 PVOUTPUT_API_KEY=acbd1234
-MYSQL_IP_ADDRESS=localhost
+MYSQL_HOST=localhost
 SBFSPOT_LOG_DIR=/var/log/sbfspot.3
 ```
 
@@ -228,15 +229,15 @@ The following sed commands will (in order):
 sudo sed -i "s/PVoutput_SID=/PVoutput_SID=${PVOUTPUT_SID}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "s/PVoutput_Key=/PVoutput_Key=${PVOUTPUT_API_KEY}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "s/^#SQL/SQL/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
-sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_IP_ADDRESS}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
+sudo sed -i "s/SQL_Hostname=.*/SQL_Hostname=${MYSQL_HOST}/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "s~/home/pi/smadata/logs~${SBFSPOT_LOG_DIR}~" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 ```
 
-Add to systemd:
+Add to systemd `/etc/systemd/system/SBFspotUploadDaemon.service`:
 
 ```shell
-echo '[Unit]
+[Unit]
 Description=Reads SMA inverter data from a database and sends it to Pvoutput.org
 
 [Service]
@@ -249,10 +250,11 @@ ExecStart=/usr/local/bin/sbfspot.3/SBFspotUploadDaemon
 [Install]
 WantedBy=multi-user.target
 Alias=SBFspotUploadDaemon.service
-' | sudo tee /lib/systemd/system/SBFspotUploadDaemon.service
-
-sudo systemctl enable SBFspotUploadDaemon.service
 ```
+
+Enable the daemon on boot:
+
+`sudo systemctl enable SBFspotUploadDaemon.service`
 
 Start the daemon:
 
