@@ -1,6 +1,6 @@
 # Overview
 
-This document will outline a shell script to enable GPIO on a [Raspberry Pi](http://www.raspberrypi.org/) to control your garage door.
+This document will outline a shell script to enable GPIO on a [Raspberry Pi](http://www.raspberrypi.org/). Mainly so I dont forget about the settle command.
 
 ## Output
 
