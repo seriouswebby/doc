@@ -13,6 +13,7 @@ echo out > /sys/class/gpio/gpio12/direction
 Turn on and off:
 
 > `echo 0 > /sys/class/gpio/gpio12/value`
+
 > `echo 1 > /sys/class/gpio/gpio12/value`
 
 ## Input
