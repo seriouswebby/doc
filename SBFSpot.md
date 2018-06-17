@@ -17,7 +17,7 @@ This guide also omits details that can be found on the web such as setting up th
 
 ### Setup Raspberry Pi
 
-First get the latest [Raspbian Jessie Lite](https://www.raspberrypi.org/downloads/raspbian/) image, current at time of writing is 2017-06-21.
+First get the latest [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/) image.
 
 Login to your pi so you can enable remote ssh access
 
@@ -31,6 +31,8 @@ First update your pi:
 Enable SSH and fix your timezone:
 
 `sudo raspi-config`
+
+> Network Options -> Hostname -> solarpi
 
 > Interfacing Options -> SSH -> Enable
 
@@ -47,7 +49,7 @@ ssh-copy-id pi@192.168.1.101
 ssh pi@192.168.1.101
 ```
 
-*_Windows_*: Use Putty/Pageant
+*_Windows_*: Use Git Bash as it contains useful unit tools, ie. ssh
 
 ### Find SMA Inverter
 
@@ -83,7 +85,7 @@ sudo mkdir /var/log/sbfspot.3
 sudo chown pi:pi /var/log/sbfspot.3
 ```
 
-Download [SBFspot](https://sbfspot.codeplex.com/) source code from the website, copy it across and extract:
+Download [SBFspot](https://github.com/SBFspot/SBFspot) source code from the website, copy it across and extract:
 
 ```shell
 scp SBFspot_SRC_331_Linux_Win32.tar.gz pi@192.168.1.101:.

@@ -157,3 +157,14 @@ WantedBy=multi-user.target
 Enable on boot `sudo systemctl enable garagepi.service`
 
 Start `sudo systemctl start garagepi.service`
+
+### Test
+
+>`curl -X GET http://garagepi.local:8000/door/state`
+
+>`curl -X POST http://garagepi.local:8000/door/open`
+
+>`curl -X POST http://garagepi.local:8000/door/stop`
+
+>`curl -X POST http://garagepi.local:8000/door/close`
+
