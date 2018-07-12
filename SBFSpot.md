@@ -17,7 +17,7 @@ This guide also omits details that can be found on the web such as setting up th
 
 ### Setup Raspberry Pi
 
-First get the latest [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/) image.
+First get the latest [Raspbian Lite](https://www.raspberrypi.org/downloads/raspbian/) image, as of writing this is Raspberian Stretch Lite April 2018.
 
 Login to your pi so you can enable remote ssh access
 
@@ -39,8 +39,9 @@ Enable SSH and fix your timezone:
 > Localisation Options -> Change Timezone
 
  * (_Optional_) [Create a new user and disable the default `pi` user](https://www.raspberrypi.org/documentation/linux/usage/users.md).
- * (_Optional_) [Setup a static IP](https://www.modmypi.com/blog/how-to-give-your-raspberry-pi-a-static-ip-address-update).
+ * (_Optional_) [Setup networking](https://raspberrypi.stackexchange.com/questions/37920/how-do-i-set-up-networking-wifi-static-ip-address).
 
+*_Windows_*: Use Git Bash as it contains useful unit tools, ie. ssh
 *_Mac/Unix_*: Copy your ssh key to save typing passwords (from your local machine):
 
 ```shell
@@ -49,13 +50,11 @@ ssh-copy-id pi@solarpi.local
 ssh pi@solarpi.local
 ```
 
-*_Windows_*: Use Git Bash as it contains useful unit tools, ie. ssh
-
 ### Find SMA Inverter
 
 Setup your bluetooth:
 
-`sudo apt-get install bluetooth`
+`sudo apt-get install -y bluetooth`
 
 Check your bluetooth and see if you can see the MAC address of your SMA inverter:
 
@@ -65,7 +64,7 @@ Check your bluetooth and see if you can see the MAC address of your SMA inverter
 
 Setup and install SBFspot to retrieve the data from the inverter and store it in a SQLite/MySQL database (this guide is using MySQL/Maria but should be very similar to setup sqlite).
 
-`sudo apt-get install mysql-client-5.5 libbluetooth-dev libboost-all-dev libmysqlclient-dev`
+`sudo apt-get install -y mysql-client libbluetooth-dev libboost-date-time-dev libboost-system-dev libboost-filesystem-dev libboost-regex-dev default-libmysqlclient-dev`
 
 Create the following folders (following the [Filesystem Hierarchical Standards](http://www.pathname.com/fhs/)):
 
@@ -85,18 +84,18 @@ sudo mkdir /var/log/sbfspot.3
 sudo chown pi:pi /var/log/sbfspot.3
 ```
 
-Download [SBFspot](https://github.com/SBFspot/SBFspot) source code from the website, copy it across and extract:
+Download [SBFspot](https://github.com/SBFspot/SBFspot/releases) source code from the website, download and extract:
 
 ```shell
-scp SBFspot_SRC_331_Linux_Win32.tar.gz pi@solarpi.local:.
-ssh pi@solarpi.local
-tar -xvf SBFspot_SRC_331_Linux_Win32.tar.gz -C /usr/src/sbfspot.3/
+wget https://github.com/SBFspot/SBFspot/archive/V3.4.1.tar.gz
+tar -xvf V3.4.1.tar.gz -C /usr/src/sbfspot.3/ --strip-components 1
 ```
 
 Build the application:
 
 ```shell
 cd /usr/src/sbfspot.3/SBFspot
+make mysql
 sudo make install_mysql
 ```
 
@@ -111,6 +110,7 @@ Create the users/database in your MySQL/MariaDB server:
 ```shell
 MYSQL_HOST=localhost
 mysql -uroot -h$MYSQL_HOST -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLDB.sql
+mysql -uroot -h$MYSQL_HOST SBFspot -p < /usr/src/sbfspot.3/SBFspot/Update_340_MySQL.sql
 mysql -uroot -h$MYSQL_HOST -p < /usr/src/sbfspot.3/SBFspot/CreateMySQLUser.sql
 ```
 
@@ -122,7 +122,12 @@ mysql -uSBFspotUser -h$MYSQL_HOST -pSBFspotPassword SBFspot
 
 ### Setup SBFSpot Config
 
-Edit your config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspot/SBFspot.cfg`):
+Edit your config (note if you screw it up just copy the template from `/usr/local/bin/sbfspot.3/SBFspot.default.cfg`):
+
+```shell
+cd /usr/local/bin/sbfspot.3
+sudo cp SBFspot.default.cfg SBFspot.cfg
+```
 
 #### Manual
 
@@ -195,12 +200,18 @@ The service/daemon reads the data from the database and sends it to Pvoutput.org
 
 ```shell
 cd /usr/src/sbfspot.3/SBFspotUploadDaemon
+make mysql
 sudo make install_mysql
 ```
 
 ### Setup SBFspotUpload Config
 
-Edit your config (note if you screw it up just copy the template from `/usr/src/sbfspot.3/SBFspotUploadDaemon/SBFspotUpload.cfg`):
+Edit your config (note if you screw it up just copy the template from `/usr/local/bin/sbfspot.3/SBFspotUpload.default.cfg`):
+
+```shell
+cd /usr/local/bin/sbfspot.3
+sudo cp SBFspotUpload.default.cfg SBFspotUpload.cfg
+```
 
 #### Manual
 
@@ -211,7 +222,7 @@ Edit your config (note if you screw it up just copy the template from `/usr/src/
 Set some environment variables (edit the variables and just paste into your shell):
 
 ```shell
-PVOUTPUT_SID=SerialNmbrInverter_1:SID_1,SerialNmbrInverter_2:SID_2, etc
+PVOUTPUT_SID=SerialNmbrInverter_1:PVoutput_System_ID_1,SerialNmbrInverter_2:PVoutput_System_ID_2, etc
 PVOUTPUT_API_KEY=acbd1234
 MYSQL_HOST=localhost
 SBFSPOT_LOG_DIR=/var/log/sbfspot.3
@@ -234,18 +245,21 @@ sudo sed -i "/SBFspot.db/ s/^/#/" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 sudo sed -i "s~/home/pi/smadata/logs~${SBFSPOT_LOG_DIR}~" /usr/local/bin/sbfspot.3/SBFspotUpload.cfg
 ```
 
+TODO: looks to automatically create a daemon/service
 Add to systemd `/etc/systemd/system/SBFspotUploadDaemon.service`:
 
 ```shell
 [Unit]
 Description=Reads SMA inverter data from a database and sends it to Pvoutput.org
+After=network.target
 
 [Service]
 Type=forking
 User=pi
 Restart=always
-RestartSec=5
-ExecStart=/usr/local/bin/sbfspot.3/SBFspotUploadDaemon
+RestartSec=60
+ExecStart=/usr/local/bin/sbfspot.3/SBFspotUploadDaemon -c /usr/local/bin/sbfspot.3/SBFspotUpload.cfg -p /run/SBFspotUploadDaemon.pid 2>&1> /dev/null
+PIDFile=/run/SBFspotUploadDaemon.pid
 
 [Install]
 WantedBy=multi-user.target

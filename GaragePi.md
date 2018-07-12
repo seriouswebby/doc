@@ -37,7 +37,7 @@ Enable SSH and fix your timezone:
 > Localisation Options -> Change Timezone
 
  * (_Optional_) [Create a new user and disable the default `pi` user](https://www.raspberrypi.org/documentation/linux/usage/users.md).
- * (_Optional_) [Setup a static IP](https://www.modmypi.com/blog/how-to-give-your-raspberry-pi-a-static-ip-address-update).
+ * (_Optional_) [Setup networking](https://raspberrypi.stackexchange.com/questions/37920/how-do-i-set-up-networking-wifi-static-ip-address).
 
 *_Mac/Unix_*: Copy your ssh key to save typing passwords (from your local machine):
 
